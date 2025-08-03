@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arthur's Den - Business Intelligence Dashboard</title>
+    
+    <!-- Professional Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1f2937;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.6;
+            font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+        }
+
+        /* Header - Sublime Design */
+        .header {
+            background: var(--gradient-primary);
+            padding: 2rem 0;
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .brand {
+            color: white;
+        }
+
+        .brand h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .brand p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        .user-info {
+            color: white;
+            text-align: right;
+        }
+
+        .user-welcome {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Navigation */
+        .nav-container {
+            background: white;
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-tabs {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-tab {
+            background: none;
+            border: none;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            color: var(--gray-600);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .nav-tab:hover {
+            color: var(--primary);
+            background: var(--gray-50);
+        }
+
+        .nav-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: var(--gray-50);
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Stats Grid - Premium Design */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: var(--gradient-primary);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            background: var(--gradient-primary);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+
+        .stat-subtitle {
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+
+        /* Data Tables - Sublime Design */
+        .data-section {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, var(--gray-50) 0%, white 100%);
+            padding: 2rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .export-btn {
+            background: var(--gradient-success);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 600px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        th {
+            background: var(--gray-50);
+            font-weight: 700;
+            color: var(--gray-700);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            color: var(--gray-900);
+            font-weight: 500;
+        }
+
+        tr:hover {
+            background: var(--gray-50);
+        }
+
+        /* Badges - Premium Design */
+        .badge {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .badge.critical {
+            background: var(--gradient-danger);
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.39);
+        }
+
+        .badge.high {
+            background: var(--gradient-warning);
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(245, 158, 11, 0.39);
+        }
+
+        .badge.medium {
+            background: var(--gradient-success);
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.39);
+        }
+
+        .badge.hot {
+            background: var(--gradient-danger);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .badge.trending {
+            background: var(--gradient-warning);
+            color: white;
+        }
+
+        .badge.emerging {
+            background: var(--gradient-success);
+            color: white;
+        }
+
+        .badge.stable {
+            background: var(--gray-600);
+            color: white;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        /* Growth Indicators */
+        .growth-positive {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .growth-negative {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        /* Alerts Section */
+        .alerts-grid {
+            display: grid;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .alert-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            border-left: 6px solid var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .alert-card.critical {
+            border-left-color: var(--danger);
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.03) 0%, white 100%);
+        }
+
+        .alert-card.opportunity {
+            border-left-color: var(--success);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.03) 0%, white 100%);
+        }
+
+        .alert-card.threat {
+            border-left-color: var(--warning);
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.03) 0%, white 100%);
+        }
+
+        .alert-card:hover {
+            transform: translateX(8px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .alert-type {
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .alert-message {
+            color: var(--gray-700);
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .alert-action {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .alert-impact {
+            font-weight: 700;
+            color: var(--success);
+            font-size: 1.1rem;
+        }
+
+        /* Loading States */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem;
+            color: var(--gray-500);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--gray-200);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .brand h1 {
+                font-size: 2rem;
+            }
+
+            .nav-tabs {
+                overflow-x: auto;
+                padding: 0 1rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            th, td {
+                padding: 1rem;
+            }
+
+            .section-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+
+        /* Professional Animations */
+        .data-section {
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Success Notifications */
+        .notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: var(--gradient-success);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-xl);
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="brand">
+                <h1><i class="fas fa-mountain"></i> Arthur's Den</h1>
+                <p>Business Intelligence Platform</p>
+            </div>
+            <div class="user-info">
+                <div class="user-welcome">Welcome back, {{ username }}</div>
+                <a href="/logout" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav-container">
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('dashboard')">
+                <i class="fas fa-tachometer-alt"></i>
+                Dashboard
+            </button>
+            <button class="nav-tab" onclick="showTab('analytics')">
+                <i class="fas fa-chart-line"></i>
+                Analytics
+            </button>
+            <button class="nav-tab" onclick="showTab('opportunities')">
+                <i class="fas fa-lightbulb"></i>
+                Opportunities
+            </button>
+            <button class="nav-tab" onclick="showTab('alerts')">
+                <i class="fas fa-exclamation-triangle"></i>
+                Critical Alerts
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">Total Revenue</div>
+                        <div class="stat-icon" style="background: var(--gradient-success);">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="totalRevenue">$157,692</div>
+                    <div class="stat-subtitle">Across all products</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">Avg Weekly Sales</div>
+                        <div class="stat-icon" style="background: var(--gradient-warning);">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="avgSales">29.2</div>
+                    <div class="stat-subtitle">Sales per week</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">Critical Alerts</div>
+                        <div class="stat-icon" style="background: var(--gradient-danger);">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="criticalAlerts">3</div>
+                    <div class="stat-subtitle">Require immediate action</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">Market Health</div>
+                        <div class="stat-icon" style="background: var(--gradient-primary);">
+                            <i class="fas fa-heartbeat"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" style="font-size: 2rem; color: var(--success);">Excellent</div>
+                    <div class="stat-subtitle">Overall market condition</div>
+                </div>
+            </div>
+
+            <!-- Products Table -->
+            <div class="data-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-box"></i>
+                        Product Intelligence
+                    </h2>
+                    <button class="export-btn" onclick="exportData()">
+                        <i class="fas fa-download"></i>
+                        Export Data
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Shop</th>
+                                <th>Price</th>
+                                <th>Weekly Sales</th>
+                                <th>Growth</th>
+                                <th>Revenue</th>
+                                <th>Priority</th>
+                                <th>Trend</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTable">
+                            <tr>
+                                <td colspan="8" class="loading">
+                                    <div class="spinner"></div>
+                                    Loading market intelligence...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="analytics" class="tab-content">
+            <div class="data-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Market Analytics
+                    </h2>
+                </div>
+                <div style="padding: 2rem;">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-title">Top Opportunity</div>
+                                <div class="stat-icon" style="background: var(--gradient-danger);">
+                                    <i class="fas fa-rocket"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" style="font-size: 1.5rem;">Space Adventure</div>
+                            <div class="stat-subtitle">+35% growth, $25K/month potential</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-title">Conversion Rate</div>
+                                <div class="stat-icon" style="background: var(--gradient-success);">
+                                    <i class="fas fa-percentage"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value">15.7%</div>
+                            <div class="stat-subtitle">Average across products</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Opportunities Tab -->
+        <div id="opportunities" class="tab-content">
+            <div class="alerts-grid" id="opportunitiesGrid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading opportunities...
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts Tab -->
+        <div id="alerts" class="tab-content">
+            <div class="alerts-grid" id="alertsGrid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading critical alerts...
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <span id="notificationText"></span>
+    </div>
+
+    <script>
+        // Global data
+        let marketData = null;
+
+        // Tab Management
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active from nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Load data if needed
+            if (tabName === 'opportunities') {
+                loadOpportunities();
+            } else if (tabName === 'alerts') {
+                loadAlerts();
+            }
+        }
+
+        // Load Market Data
+        async function loadMarketData() {
+            try {
+                const response = await fetch('/api/market-data');
+                const data = await response.json();
+                marketData = data;
+                
+                updateProductsTable();
+                updateStats();
+                
+            } catch (error) {
+                console.error('Error loading market data:', error);
+                showNotification('Error loading market data', 'error');
+            }
+        }
+
+        // Update Products Table
+        function updateProductsTable() {
+            if (!marketData) return;
+            
+            const tbody = document.getElementById('productsTable');
+            tbody.innerHTML = marketData.products.map(product => `
+                <tr>
+                    <td><strong>${product.title}</strong></td>
+                    <td>${product.shop}</td>
+                    <td><strong>$${product.price.toFixed(2)}</strong></td>
+                    <td><strong>${product.weekly_sales}</strong></td>
+                    <td><span class="growth-positive">${product.sales_trend}</span></td>
+                    <td><strong>$${product.revenue.toLocaleString()}</strong></td>
+                    <td><span class="badge ${product.priority.toLowerCase()}">${product.priority}</span></td>
+                    <td><span class="badge ${product.market_trend.toLowerCase()}">${product.market_trend}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        // Update Stats
+        function updateStats() {
+            if (!marketData) return;
+            
+            const summary = marketData.insights.market_summary;
+            document.getElementById('totalRevenue').textContent = summary.total_revenue;
+            document.getElementById('avgSales').textContent = summary.avg_weekly_sales;
+            document.getElementById('criticalAlerts').textContent = summary.critical_alerts;
+        }
+
+        // Load Opportunities
+        function loadOpportunities() {
+            if (!marketData) return;
+            
+            const grid = document.getElementById('opportunitiesGrid');
+            grid.innerHTML = marketData.insights.opportunities.map(opp => `
+                <div class="alert-card opportunity">
+                    <div class="alert-header">
+                        <div class="alert-type" style="color: var(--success);">🎯 ${opp.urgency} Opportunity</div>
+                    </div>
+                    <div class="alert-message">
+                        <strong>${opp.niche}</strong> - ${opp.growth} growth trend
+                    </div>
+                    <div class="alert-action">Action: ${opp.action}</div>
+                    <div class="alert-impact">Revenue Potential: ${opp.revenue_potential}</div>
+                </div>
+            `).join('');
+        }
+
+        // Load Alerts
+        function loadAlerts() {
+            if (!marketData) return;
+            
+            const grid = document.getElementById('alertsGrid');
+            grid.innerHTML = marketData.insights.alerts.map(alert => `
+                <div class="alert-card ${alert.type.toLowerCase().includes('opportunity') ? 'opportunity' : 
+                    alert.type.toLowerCase().includes('threat') ? 'threat' : 'critical'}">
+                    <div class="alert-header">
+                        <div class="alert-type">${alert.type}</div>
+                    </div>
+                    <div class="alert-message">${alert.message}</div>
+                    <div class="alert-action">Action: ${alert.action}</div>
+                    <div class="alert-impact">Impact: ${alert.revenue_impact}</div>
+                </div>
+            `).join('');
+        }
+
+        // Export Data
+        async function exportData() {
+            try {
+                const response = await fetch('/api/export');
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `arthursden_intelligence_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                showNotification('Data exported successfully!', 'success');
+            } catch (error) {
+                console.error('Export error:', error);
+                showNotification('Export failed', 'error');
+            }
+        }
+
+        // Show Notification
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const text = document.getElementById('notificationText');
+            
+            text.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMarketData();
+            
+            // Auto-refresh every 5 minutes
+            setInterval(loadMarketData, 5 * 60 * 1000);
+        });
+    </script>
+</body>
+</html>

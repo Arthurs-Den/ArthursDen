@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arthur's Den - Business Intelligence Login</title>
+    
+    <!-- Professional Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #0891b2;
+            --accent: #0d9488;
+            --success: #059669;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --dark: #1f2937;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --gradient-primary: linear-gradient(135deg, #1e40af 0%, #0891b2 100%);
+            --gradient-bg: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gradient-bg);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient-primary);
+            opacity: 0.05;
+            animation: gradientShift 8s ease-in-out infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { transform: translateX(-50px) translateY(-50px) scale(1.1); }
+            50% { transform: translateX(50px) translateY(50px) scale(1.2); }
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 3rem;
+            border-radius: 24px;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+            z-index: 10;
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .business-logo {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient-primary);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .business-logo::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%);
+        }
+
+        .logo-icon {
+            font-size: 2.5rem;
+            color: white;
+            z-index: 2;
+            position: relative;
+        }
+
+        .brand-name {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-tagline {
+            color: var(--gray-600);
+            font-size: 1rem;
+            font-weight: 500;
+            letter-spacing: 0.025em;
+        }
+
+        .security-badge {
+            background: rgba(5, 150, 105, 0.1);
+            color: var(--success);
+            padding: 0.75rem 1.25rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin: 1.5rem 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 1px solid rgba(5, 150, 105, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.75rem;
+            color: var(--gray-700);
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 0.025em;
+        }
+
+        .input-container {
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            background: white;
+            color: var(--gray-900);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--gray-500);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .password-toggle:hover {
+            color: var(--primary);
+            background: var(--gray-50);
+        }
+
+        .login-btn {
+            width: 100%;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            letter-spacing: 0.025em;
+        }
+
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .login-btn:hover::before {
+            left: 100%;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login-btn:disabled:hover {
+            transform: none;
+            box-shadow: var(--shadow-md);
+        }
+
+        .message {
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            display: none;
+            animation: slideInDown 0.3s ease-out;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-message {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(220, 38, 38, 0.2);
+        }
+
+        .success-message {
+            background: rgba(5, 150, 105, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(5, 150, 105, 0.2);
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .footer-text {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--gray-500);
+            font-size: 0.875rem;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 2rem;
+                margin: 1rem;
+                border-radius: 20px;
+            }
+            
+            .brand-name {
+                font-size: 1.8rem;
+            }
+            
+            .business-logo {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .logo-icon {
+                font-size: 2rem;
+            }
+        }
+
+        /* Premium hover effects */
+        .login-container:hover {
+            box-shadow: 0 32px 64px -12px rgba(0, 0, 0, 0.35);
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo-section">
+            <div class="business-logo">
+                <i class="fas fa-mountain logo-icon"></i>
+            </div>
+            <h1 class="brand-name">Arthur's Den</h1>
+            <p class="brand-tagline">Business Intelligence Platform</p>
+            <div class="security-badge">
+                <i class="fas fa-shield-check"></i>
+                Secure Business Portal
+            </div>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">
+                    <i class="fas fa-user"></i> Username
+                </label>
+                <input type="text" id="username" name="username" required autocomplete="username" placeholder="Enter your username">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">
+                    <i class="fas fa-lock"></i> Password
+                </label>
+                <div class="input-container">
+                    <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter your password">
+                    <button type="button" class="password-toggle" onclick="togglePassword()">
+                        <i class="fas fa-eye" id="passwordToggleIcon"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <button type="submit" class="login-btn" id="loginBtn">
+                <span id="loginText">
+                    <i class="fas fa-sign-in-alt"></i> Access Arthur's Den
+                </span>
+            </button>
+        </form>
+
+        <div class="footer-text">
+            Protected by enterprise-grade security
+        </div>
+    </div>
+
+    <script>
+        // Password Toggle Functionality
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('passwordToggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+
+        // Enhanced Login Form Handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const loginBtn = document.getElementById('loginBtn');
+            const loginText = document.getElementById('loginText');
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Hide messages
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            
+            // Show loading state with spinner
+            loginBtn.disabled = true;
+            loginText.innerHTML = '<div class="loading-spinner"></div> Authenticating...';
+            
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    successMessage.textContent = '✅ ' + data.message;
+                    successMessage.style.display = 'block';
+                    loginText.innerHTML = '<i class="fas fa-check"></i> Success! Redirecting...';
+                    
+                    setTimeout(() => {
+                        window.location.href = data.redirect || '/';
+                    }, 1000);
+                } else {
+                    errorMessage.textContent = data.error || 'Login failed';
+                    errorMessage.style.display = 'block';
+                    
+                    // Shake animation for error
+                    loginBtn.style.animation = 'shake 0.5s ease-in-out';
+                    setTimeout(() => {
+                        loginBtn.style.animation = '';
+                    }, 500);
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                errorMessage.textContent = 'Connection error. Please check your internet connection.';
+                errorMessage.style.display = 'block';
+            } finally {
+                if (!successMessage.style.display || successMessage.style.display === 'none') {
+                    loginBtn.disabled = false;
+                    loginText.innerHTML = '<i class="fas fa-sign-in-alt"></i> Access Arthur\'s Den';
+                }
+            }
+        });
+
+        // Enhanced UX Features
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-focus username field
+            document.getElementById('username').focus();
+            
+            // Add enter key handling for password toggle
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && e.target.id !== 'loginBtn') {
+                    document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+                }
+            });
+            
+            // Add subtle animations to form fields
+            const formInputs = document.querySelectorAll('input');
+            formInputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.style.transform = 'scale(1.02)';
+                    this.parentElement.style.transition = 'transform 0.2s ease';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement.style.transform = 'scale(1)';
+                });
+            });
+        });
+
+        // Add shake animation for errors
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
