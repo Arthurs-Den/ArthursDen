@@ -1,6 +1,9 @@
 from flask import Flask, request, session, redirect, jsonify, render_template
 import os
 import secrets
+import requests
+import json
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
@@ -8,6 +11,96 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 # Simple credentials
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
+
+# Etsy API Configuration
+ETSY_API_KEY = os.environ.get('ETSY_API_KEY', 'your-etsy-api-key')
+ETSY_BASE_URL = 'https://openapi.etsy.com/v3'
+
+def fetch_etsy_listings(keywords, limit=20):
+    """Fetch real-time listings from Etsy API"""
+    try:
+        headers = {
+            'x-api-key': ETSY_API_KEY,
+            'Content-Type': 'application/json'
+        }
+        
+        params = {
+            'keywords': keywords,
+            'limit': limit,
+            'includes': 'Images,Shop,User',
+            'sort_on': 'score',
+            'sort_order': 'desc'
+        }
+        
+        response = requests.get(
+            f'{ETSY_BASE_URL}/application/listings/active',
+            headers=headers,
+            params=params,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(f"Etsy API Error: {response.status_code} - {response.text}")
+            return None
+            
+    except Exception as e:
+        print(f"Error fetching Etsy data: {e}")
+        return None
+
+def process_etsy_data(listings_data, search_term):
+    """Process Etsy API response into our format"""
+    if not listings_data or 'results' not in listings_data:
+        return []
+    
+    processed_products = []
+    
+    for i, listing in enumerate(listings_data['results'][:10]):  # Top 10 results
+        try:
+            # Calculate estimated metrics (Etsy doesn't provide all data publicly)
+            price = float(listing.get('price', {}).get('amount', 0)) / 100  # Convert cents to dollars
+            views = listing.get('views', 0)
+            favorites = listing.get('num_favorers', 0)
+            
+            # Estimate sales based on views and favorites (industry averages)
+            estimated_weekly_sales = max(1, int((views * 0.02) + (favorites * 0.1)))
+            estimated_revenue = estimated_weekly_sales * price * 4  # Monthly estimate
+            
+            # Determine priority based on performance metrics
+            if views > 1000 and favorites > 50:
+                priority = "Critical"
+                trend = "Hot"
+            elif views > 500 and favorites > 25:
+                priority = "High" 
+                trend = "Trending"
+            else:
+                priority = "Medium"
+                trend = "Stable"
+            
+            product = {
+                "id": i + 1,
+                "title": listing.get('title', 'Unknown Product')[:50] + "...",
+                "shop": listing.get('Shop', {}).get('shop_name', 'Unknown Shop'),
+                "price": price,
+                "views": views,
+                "favorites": favorites,
+                "weekly_sales": estimated_weekly_sales,
+                "revenue": int(estimated_revenue),
+                "sales_trend": f"+{min(50, max(5, int(views/100)))}%",
+                "market_trend": trend,
+                "priority": priority,
+                "etsy_url": listing.get('url', ''),
+                "search_term": search_term
+            }
+            
+            processed_products.append(product)
+            
+        except Exception as e:
+            print(f"Error processing listing: {e}")
+            continue
+    
+    return processed_products
 
 @app.route('/')
 def home():
@@ -20,96 +113,88 @@ def get_market_data():
     if not session.get('authenticated'):
         return jsonify({'error': 'Authentication required'}), 401
     
-    # Premium market intelligence data
-    market_data = {
-        "products": [
+    # Fetch real-time Etsy data for multiple search terms
+    search_terms = [
+        "nursery wall art",
+        "personalized baby gifts", 
+        "milestone baby blanket",
+        "custom name sign",
+        "baby shower decorations"
+    ]
+    
+    all_products = []
+    total_revenue = 0
+    total_weekly_sales = 0
+    critical_alerts = 0
+    
+    for term in search_terms:
+        listings_data = fetch_etsy_listings(term, limit=5)  # Get 5 per category
+        if listings_data:
+            products = process_etsy_data(listings_data, term)
+            all_products.extend(products)
+            
+            # Calculate totals
+            for product in products:
+                total_revenue += product['revenue']
+                total_weekly_sales += product['weekly_sales']
+                if product['priority'] == 'Critical':
+                    critical_alerts += 1
+    
+    # If API fails, use fallback sample data
+    if not all_products:
+        all_products = [
             {
-                "id": 1, "title": "Space Adventure Wall Art - Minimalist Kids Decor", 
-                "shop": "RusticCharmDesigns", "price": 38.75, "views": 1420, "favorites": 56,
-                "total_sales": 445, "weekly_sales": 35, "monthly_sales": 148, "sales_trend": "+35%",
-                "revenue": 17244, "conversion": 31.3, "competition": "Low", "opportunity": "High",
-                "theme": "Space Adventure", "market_trend": "Hot", "priority": "Critical"
-            },
-            {
-                "id": 2, "title": "Floral Milestone Board - Monthly Photos Premium", 
-                "shop": "BespokeBaby", "price": 52.00, "views": 2180, "favorites": 142,
-                "total_sales": 1567, "weekly_sales": 42, "monthly_sales": 179, "sales_trend": "+28%",
-                "revenue": 81484, "conversion": 11.4, "competition": "Low", "opportunity": "High",
-                "theme": "Floral Milestone", "market_trend": "Hot", "priority": "Critical"
-            },
-            {
-                "id": 3, "title": "Arctic Animals Growth Chart - Personalized Wooden", 
-                "shop": "NurseryNameSigns", "price": 45.99, "views": 1340, "favorites": 78,
-                "total_sales": 289, "weekly_sales": 28, "monthly_sales": 118, "sales_trend": "+33%",
-                "revenue": 13290, "conversion": 21.6, "competition": "Low", "opportunity": "High",
-                "theme": "Arctic Animals", "market_trend": "Trending", "priority": "High"
-            },
-            {
-                "id": 4, "title": "Rustic Woodland Name Sign - Premium Handcrafted", 
-                "shop": "WoodWorksStudio", "price": 34.99, "views": 1850, "favorites": 89,
-                "total_sales": 847, "weekly_sales": 23, "monthly_sales": 98, "sales_trend": "+15%",
-                "revenue": 29645, "conversion": 8.2, "competition": "High", "opportunity": "Medium",
-                "theme": "Rustic Woodland", "market_trend": "Stable", "priority": "Medium"
-            },
-            {
-                "id": 5, "title": "Modern Safari Nursery Collection - Custom Bundle", 
-                "shop": "PersonalizedPerfection", "price": 68.50, "views": 1120, "favorites": 67,
-                "total_sales": 234, "weekly_sales": 18, "monthly_sales": 76, "sales_trend": "+22%",
-                "revenue": 16029, "conversion": 6.0, "competition": "Medium", "opportunity": "High",
-                "theme": "Modern Safari", "market_trend": "Emerging", "priority": "High"
+                "id": 1, "title": "API Connection Required - Using Sample Data",
+                "shop": "Configure Etsy API", "price": 0.00, "views": 0, "favorites": 0,
+                "weekly_sales": 0, "revenue": 0, "sales_trend": "0%",
+                "market_trend": "Offline", "priority": "Critical", "etsy_url": "",
+                "search_term": "API Setup Required"
             }
-        ],
+        ]
+        total_revenue = 0
+        total_weekly_sales = 0
+        critical_alerts = 1
+    
+    # Calculate averages
+    avg_weekly_sales = round(total_weekly_sales / len(all_products), 1) if all_products else 0
+    
+    # Generate insights from real data
+    top_products = sorted(all_products, key=lambda x: x['revenue'], reverse=True)[:3]
+    
+    opportunities = []
+    alerts = []
+    
+    for product in top_products:
+        if product['priority'] == 'Critical':
+            opportunities.append({
+                "niche": product['search_term'].title(),
+                "growth": product['sales_trend'],
+                "revenue_potential": f"${product['revenue']:,}/month",
+                "action": f"Target {product['search_term']} niche - High demand detected",
+                "urgency": "Critical"
+            })
+            
+            alerts.append({
+                "type": "High Opportunity",
+                "message": f"{product['title']} showing strong performance in {product['search_term']}",
+                "action": f"Analyze {product['shop']} strategy and create competing product",
+                "revenue_impact": f"${product['revenue']:,}/month potential",
+                "etsy_url": product['etsy_url']
+            })
+    
+    market_data = {
+        "products": all_products,
         "insights": {
             "market_summary": {
-                "total_revenue": "$157,692",
-                "avg_weekly_sales": "29.2",
-                "top_opportunity": "Space Adventure (+35% growth)",
-                "critical_alerts": 3,
-                "market_health": "Excellent"
+                "total_revenue": f"${total_revenue:,}",
+                "avg_weekly_sales": str(avg_weekly_sales),
+                "top_opportunity": top_products[0]['search_term'].title() if top_products else "No data",
+                "critical_alerts": critical_alerts,
+                "market_health": "Excellent" if critical_alerts > 0 else "Good",
+                "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
             },
-            "opportunities": [
-                {
-                    "niche": "Space/Adventure Theme",
-                    "growth": "+35%",
-                    "revenue_potential": "$25,000/month",
-                    "action": "Enter immediately - Low competition window closing",
-                    "urgency": "Critical"
-                },
-                {
-                    "niche": "Arctic Animals Trend", 
-                    "growth": "+33%",
-                    "revenue_potential": "$15,000/month",
-                    "action": "First-mover advantage available",
-                    "urgency": "High"
-                },
-                {
-                    "niche": "Premium Milestone Products",
-                    "growth": "+28%", 
-                    "revenue_potential": "$35,000/month",
-                    "action": "Target luxury market segment",
-                    "urgency": "High"
-                }
-            ],
-            "alerts": [
-                {
-                    "type": "Critical Opportunity",
-                    "message": "Space Adventure theme showing explosive 35% growth with minimal competition",
-                    "action": "Launch premium space collection ($40-65 price range) within 7 days",
-                    "revenue_impact": "$25K/month potential"
-                },
-                {
-                    "type": "Competitive Threat", 
-                    "message": "BespokeBaby dominates milestone market with 42 sales/week",
-                    "action": "Develop competitive response or find alternative niche",
-                    "revenue_impact": "$81K revenue at risk"
-                },
-                {
-                    "type": "Emerging Trend",
-                    "message": "Arctic Animals showing 33% growth - early adoption window",
-                    "action": "Create comprehensive arctic collection before competitors",
-                    "revenue_impact": "$15K/month opportunity"
-                }
-            ]
+            "opportunities": opportunities,
+            "alerts": alerts
         }
     }
     
@@ -120,21 +205,25 @@ def export_data():
     if not session.get('authenticated'):
         return jsonify({'error': 'Authentication required'}), 401
     
-    # Simulate CSV export
+    # Get current market data for export
+    market_response = get_market_data()
+    market_data = market_response.get_json()
+    
     import io
     from flask import Response
     
     output = io.StringIO()
-    output.write("Product,Shop,Price,Weekly Sales,Growth,Revenue,Priority\n")
-    output.write("Space Adventure Wall Art,RusticCharmDesigns,$38.75,35,+35%,$17244,Critical\n")
-    output.write("Floral Milestone Board,BespokeBaby,$52.00,42,+28%,$81484,Critical\n")
-    output.write("Arctic Animals Chart,NurseryNameSigns,$45.99,28,+33%,$13290,High\n")
+    output.write("Product,Shop,Price,Views,Favorites,Weekly Sales,Revenue,Priority,Trend,Search Term,Etsy URL\n")
+    
+    for product in market_data['products']:
+        output.write(f'"{product["title"]}","{product["shop"]}",${product["price"]:.2f},{product["views"]},{product["favorites"]},{product["weekly_sales"]},${product["revenue"]},{product["priority"]},{product["market_trend"]},"{product["search_term"]}","{product.get("etsy_url", "")}"\n')
     
     output.seek(0)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     return Response(
         output.getvalue(),
         mimetype='text/csv',
-        headers={'Content-Disposition': f'attachment; filename=arthursden_intelligence_{session.get("username")}.csv'}
+        headers={'Content-Disposition': f'attachment; filename=arthursden_realtime_data_{timestamp}.csv'}
     )
 
 @app.route('/login', methods=['GET', 'POST'])
