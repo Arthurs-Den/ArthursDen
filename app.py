@@ -20,27 +20,37 @@ def fetch_etsy_listings(keywords, limit=20):
     """Fetch real-time listings from Etsy API"""
     try:
         headers = {
-            'x-api-key': ETSY_API_KEY,
-            'Content-Type': 'application/json'
+            'x-api-key': ETSY_API_KEY
         }
         
         params = {
             'keywords': keywords,
             'limit': limit,
-            'includes': 'Images,Shop,User',
-            'sort_on': 'score',
+            'includes': 'Images,Shop',
+            'sort_on': 'created',
             'sort_order': 'desc'
         }
+        
+        # Debug logging
+        print(f"Fetching Etsy data for: {keywords}")
+        print(f"API Key (first 10 chars): {ETSY_API_KEY[:10]}...")
         
         response = requests.get(
             f'{ETSY_BASE_URL}/application/listings/active',
             headers=headers,
             params=params,
-            timeout=10
+            timeout=15
         )
         
+        print(f"Response status: {response.status_code}")
+        print(f"Response headers: {dict(response.headers)}")
+        if response.status_code != 200:
+            print(f"Error response: {response.text}")
+        
         if response.status_code == 200:
-            return response.json()
+            data = response.json()
+            print(f"Successfully fetched {len(data.get('results', []))} listings")
+            return data
         else:
             print(f"Etsy API Error: {response.status_code} - {response.text}")
             return None
@@ -255,6 +265,22 @@ def logout():
 @app.route('/health')
 def health():
     return {'status': 'healthy', 'app': 'ArthursDen', 'authenticated': session.get('authenticated', False)}
+
+@app.route('/api/debug-etsy')
+def debug_etsy():
+    if not session.get('authenticated'):
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    # Test API connection
+    test_data = fetch_etsy_listings("baby", 1)
+    
+    return jsonify({
+        'api_key_configured': ETSY_API_KEY != 'your-etsy-api-key',
+        'api_key_preview': ETSY_API_KEY[:10] + "..." if ETSY_API_KEY != 'your-etsy-api-key' else 'Not set',
+        'test_call_successful': test_data is not None,
+        'test_data_sample': test_data.get('results', [])[:1] if test_data else None,
+        'base_url': ETSY_BASE_URL
+    })
 
 if __name__ == '__main__':
     app.run(debug=True)
