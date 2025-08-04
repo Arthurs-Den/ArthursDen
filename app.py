@@ -14,41 +14,49 @@ from utils import (
 import logging
 import time
 from functools import wraps
-from flask_wtf.csrf import CSRFProtect
-from config import config
-from database import Database
 
 # Initialize Flask app
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 
-# Load configuration
-config_name = os.environ.get('FLASK_ENV', 'development')
-app.config.from_object(config[config_name])
-
-# Initialize security
-csrf = CSRFProtect(app)
-
-# Initialize database
-db = Database(app.config['DATABASE_PATH'])
-
-# Setup logging
+# Setup basic logging
 logging.basicConfig(
-    level=getattr(logging, app.config['LOG_LEVEL']),
-    format='%(asctime)s %(levelname)s %(name)s %(message)s',
-    handlers=[
-        logging.FileHandler(app.config['LOG_FILE']),
-        logging.StreamHandler()
-    ]
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s'
 )
 logger = logging.getLogger(__name__)
 
 # Legacy admin credentials for backward compatibility
-ADMIN_USERNAME = app.config['ADMIN_USERNAME']
-ADMIN_PASSWORD = app.config['ADMIN_PASSWORD']
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
 # Etsy API Configuration
-ETSY_API_KEY = app.config['ETSY_API_KEY']  
-ETSY_BASE_URL = app.config['ETSY_BASE_URL']
+ETSY_API_KEY = os.environ.get('ETSY_API_KEY', 'your-etsy-api-key')
+ETSY_BASE_URL = 'https://openapi.etsy.com/v3'
+
+# Simple in-memory user storage (keeps existing functionality)
+USERS_DB = {
+    'admin': {
+        'password_hash': hashlib.sha256('admin123'.encode()).hexdigest(),
+        'role': 'admin',
+        'name': 'Administrator',
+        'email': 'admin@arthursden.com',
+        'created': datetime.now().isoformat(),
+        'search_terms': [
+            "nursery wall art uk",
+            "personalised baby gifts",
+            "custom name sign uk",
+            "wooden name plaque",
+            "baby room decor uk"
+        ],
+        'watchlist_shops': [],
+        'settings': {
+            'notifications': True,
+            'auto_refresh': True,
+            'export_format': 'csv'
+        }
+    }
+}
 
 # Rate limiting decorator
 def rate_limit(max_requests=10, window=60):
@@ -115,9 +123,44 @@ def log_api_call(f):
             raise
     return wrapper
 
+def hash_password(password):
+    """Hash password for secure storage"""
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def verify_password(password, hash_password):
+    """Verify password against hash"""
+    return hashlib.sha256(password.encode()).hexdigest() == hash_password
+
+def create_user(username, password, name, email, role='user'):
+    """Create new user account"""
+    if username in USERS_DB:
+        return False, "Username already exists"
+    
+    USERS_DB[username] = {
+        'password_hash': hash_password(password),
+        'role': role,
+        'name': name,
+        'email': email,
+        'created': datetime.now().isoformat(),
+        'search_terms': [
+            "nursery wall art uk",
+            "personalised baby gifts",
+            "custom name sign uk",
+            "wooden name plaque",
+            "baby room decor uk"
+        ],
+        'watchlist_shops': [],
+        'settings': {
+            'notifications': True,
+            'auto_refresh': True,
+            'export_format': 'csv'
+        }
+    }
+    return True, "User created successfully"
+
 def get_user_data(username):
     """Get user data from database"""
-    return db.get_user(username) or {}
+    return USERS_DB.get(username, {})
 
 def fetch_etsy_listings(keywords, limit=20):
     """Fetch real-time listings from Etsy API with comprehensive seller data"""
@@ -306,18 +349,8 @@ def get_market_data():
     if not session.get('authenticated'):
         return jsonify({'error': 'Authentication required'}), 401
     
-    username = session.get('username')
-    user_data = db.get_user(username)
-    
-    # Check cache first
-    cache_key = f"market_data_{username}"
-    cached_data = db.get_cached_market_data(cache_key)
-    if cached_data:
-        logger.info(f"Returning cached market data for {username}")
-        return jsonify(cached_data)
-    
-    # Get custom search terms from user data
-    search_terms = user_data.get('search_terms', [
+    # Get custom search terms from session or use UK-focused defaults
+    search_terms = session.get('search_terms', [
         "nursery wall art uk",
         "personalised baby gifts uk", 
         "milestone baby blanket",
@@ -326,10 +359,10 @@ def get_market_data():
         "wooden name plaque",
         "children's bedroom decor",
         "bespoke baby gifts"
-    ]) if user_data else []
+    ])
     
-    # Get shops to watch from user data
-    watchlist_shops = user_data.get('watchlist_shops', []) if user_data else []
+    # Get shops to watch from session
+    watchlist_shops = session.get('watchlist_shops', [])
     
     all_products = []
     total_revenue = 0
@@ -455,10 +488,6 @@ def get_market_data():
         }
     }
     
-    # Cache the results
-    db.cache_market_data(cache_key, market_data, expires_minutes=5)
-    logger.info(f"Generated and cached new market data for {username}")
-    
     return jsonify(market_data)
 
 @app.route('/api/export')
@@ -502,18 +531,19 @@ def login():
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
     
-    # Check database for user
-    user_data = db.get_user(username)
-    if user_data and db.verify_password(username, password):
-        session['authenticated'] = True
-        session['username'] = username
-        session['user_role'] = user_data['role']
-        session['user_name'] = user_data['name']
-        # Load user's personal settings
-        session['search_terms'] = user_data.get('search_terms', [])
-        session['watchlist_shops'] = user_data.get('watchlist_shops', [])
-        logger.info(f"User {username} logged in successfully")
-        return jsonify({'success': True, 'message': 'Login successful', 'redirect': '/'})
+    # Check multi-user database first
+    if username in USERS_DB:
+        user_data = USERS_DB[username]
+        if verify_password(password, user_data['password_hash']):
+            session['authenticated'] = True
+            session['username'] = username
+            session['user_role'] = user_data['role']
+            session['user_name'] = user_data['name']
+            # Load user's personal settings
+            session['search_terms'] = user_data.get('search_terms', [])
+            session['watchlist_shops'] = user_data.get('watchlist_shops', [])
+            logger.info(f"User {username} logged in successfully")
+            return jsonify({'success': True, 'message': 'Login successful', 'redirect': '/'})
     
     # Fallback to legacy admin credentials
     elif username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
@@ -547,7 +577,7 @@ def user_management():
     
     return render_template('users.html', 
                          username=session.get('user_name', 'Admin'),
-                         users=db.get_all_users())
+                         users=USERS_DB)
 
 @app.route('/api/create-user', methods=['POST'])
 def api_create_user():
@@ -589,7 +619,7 @@ def api_create_user():
             if not valid_email:
                 return jsonify({'error': email_msg}), 400
         
-        success, message = db.create_user(username, password, name, email, role)
+        success, message = create_user(username, password, name, email, role)
         if success:
             logger.info(f"User {username} created by admin {session.get('username')}")
             return jsonify({'success': True, 'message': message})
@@ -608,12 +638,15 @@ def api_delete_user():
     data = request.get_json()
     username = data.get('username', '').strip()
     
-    success, message = db.delete_user(username)
-    if success:
+    if username == 'admin':
+        return jsonify({'error': 'Cannot delete admin user'}), 400
+    
+    if username in USERS_DB:
+        del USERS_DB[username]
         logger.info(f"User {username} deleted by admin {session.get('username')}")
-        return jsonify({'success': True, 'message': message})
+        return jsonify({'success': True, 'message': 'User deleted successfully'})
     else:
-        return jsonify({'error': message}), 400 if 'Cannot delete' in message else 404
+        return jsonify({'error': 'User not found'}), 404
 
 @app.route('/api/update-search-terms', methods=['POST'])
 def update_search_terms():
@@ -635,8 +668,10 @@ def update_search_terms():
         
         session['search_terms'] = clean_terms
         
-        # Save to database
-        db.update_user_search_terms(username, clean_terms)
+        # Save to user profile
+        if username in USERS_DB:
+            USERS_DB[username]['search_terms'] = clean_terms
+        
         logger.info(f"Updated {len(clean_terms)} search terms for user {username}")
         
         return jsonify({
@@ -669,8 +704,10 @@ def update_watchlist():
         
         session['watchlist_shops'] = clean_shops
         
-        # Save to database
-        db.update_user_watchlist(username, clean_shops)
+        # Save to user profile
+        if username in USERS_DB:
+            USERS_DB[username]['watchlist_shops'] = clean_shops
+        
         logger.info(f"Updated watchlist with {len(clean_shops)} shops for user {username}")
         
         return jsonify({
@@ -739,9 +776,9 @@ def logout():
 @app.route('/health')
 def health():
     try:
-        # Test database connection
-        db.get_user('admin')
-        db_status = 'healthy'
+        # Test in-memory database
+        test_user = USERS_DB.get('admin')
+        db_status = 'healthy' if test_user else 'unhealthy'
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
         db_status = 'unhealthy'
@@ -769,22 +806,13 @@ def rate_limit_error(error):
     logger.warning(f"Rate limit exceeded: {request.remote_addr}")
     return jsonify({'error': 'Rate limit exceeded. Please try again later.'}), 429
 
-# Cleanup function
+# Simple request counter (for future use)
 @app.before_request
 def before_request():
-    # Clean up old cache entries periodically
-    if hasattr(before_request, 'cleanup_counter'):
-        before_request.cleanup_counter += 1
+    if hasattr(before_request, 'request_counter'):
+        before_request.request_counter += 1
     else:
-        before_request.cleanup_counter = 1
-    
-    # Run cleanup every 100 requests
-    if before_request.cleanup_counter % 100 == 0:
-        try:
-            db.cleanup_old_cache()
-            logger.info("Cleaned up old cache entries")
-        except Exception as e:
-            logger.error(f"Cache cleanup failed: {e}")
+        before_request.request_counter = 1
 
 @app.route('/api/debug-etsy')
 def debug_etsy():
@@ -823,7 +851,7 @@ def system_stats():
         disk = psutil.disk_usage('/')
         
         # Get database stats (safe way)
-        total_users = len(db.get_all_users())
+        total_users = len(USERS_DB)
         
         return jsonify({
             'system': {
@@ -834,7 +862,7 @@ def system_stats():
             },
             'database': {
                 'total_users': total_users,
-                'database_size_mb': round(os.path.getsize(app.config['DATABASE_PATH']) / (1024**2), 2) if os.path.exists(app.config['DATABASE_PATH']) else 0
+                'storage_type': 'in-memory'
             },
             'application': {
                 'demo_mode': ETSY_API_KEY == 'your-etsy-api-key',
@@ -844,14 +872,14 @@ def system_stats():
         })
     except ImportError:
         # Fallback if psutil not available
-        total_users = len(db.get_all_users())
+        total_users = len(USERS_DB)
         return jsonify({
             'system': {
                 'status': 'System monitoring unavailable (install psutil for detailed stats)'
             },
             'database': {
                 'total_users': total_users,
-                'database_size_mb': round(os.path.getsize(app.config['DATABASE_PATH']) / (1024**2), 2) if os.path.exists(app.config['DATABASE_PATH']) else 0
+                'storage_type': 'in-memory'
             },
             'application': {
                 'demo_mode': ETSY_API_KEY == 'your-etsy-api-key',
