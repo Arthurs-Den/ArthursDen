@@ -582,6 +582,69 @@
             transform: translateX(0);
         }
 
+        .notification.error {
+            background: var(--gradient-danger);
+        }
+
+        .notification.warning {
+            background: var(--gradient-warning);
+        }
+
+        .notification.info {
+            background: var(--gradient-primary);
+        }
+
+        /* Connection Status Indicator */
+        .connection-status {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            z-index: 999;
+            transition: all 0.3s ease;
+        }
+
+        .connection-status.online {
+            background: var(--success);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+        }
+
+        .connection-status.demo {
+            background: var(--warning);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .connection-status.offline {
+            background: var(--danger);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Enhanced empty states */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--gray-600);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: var(--gray-400);
+        }
+
+        .empty-state h3 {
+            margin-bottom: 0.5rem;
+            color: var(--gray-700);
+        }
+
+        .empty-state p {
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
         /* Product Details Modal */
         .modal {
             display: none;
@@ -1148,6 +1211,9 @@
         <span id="notificationText"></span>
     </div>
 
+    <!-- Connection Status Indicator -->
+    <div id="connectionStatus" class="connection-status demo" title="Demo Mode - No API Key"></div>
+
     <script>
         // Global data
         let marketData = null;
@@ -1176,19 +1242,40 @@
             }
         }
 
-        // Load Market Data
+        // Load Market Data with enhanced error handling
         async function loadMarketData() {
+            showLoadingState('productsTable', 'Loading market intelligence...');
+            
             try {
-                const response = await fetch('/api/market-data');
-                const data = await response.json();
+                const data = await safeApiCall('/api/market-data');
                 marketData = data;
                 
                 updateProductsTable();
                 updateStats();
                 
+                // Check if we're in demo mode
+                if (data.products && data.products.length > 0 && 
+                    data.products[0].seller_profile?.shop_name?.includes('UK')) {
+                    updateConnectionStatus('demo');
+                    showNotification('Using demo data - Set up your Etsy API key for live data', 'info');
+                } else {
+                    updateConnectionStatus('online');
+                }
+                
             } catch (error) {
                 console.error('Error loading market data:', error);
-                showNotification('Error loading market data', 'error');
+                showNotification(error.message || 'Error loading market data', 'error');
+                
+                // Show empty state with helpful message
+                document.getElementById('productsTable').innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 3rem; color: var(--gray-600);">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem; color: var(--warning);"></i><br>
+                            <strong>Unable to load market data</strong><br>
+                            <small>${error.message || 'Please try again later'}</small>
+                        </td>
+                    </tr>
+                `;
             }
         }
 
@@ -1447,17 +1534,95 @@
             }
         }
 
-        // Show Notification
+        // Show Notification with better styling
         function showNotification(message, type = 'success') {
             const notification = document.getElementById('notification');
             const text = document.getElementById('notificationText');
             
-            text.textContent = message;
+            // Remove existing type classes
+            notification.classList.remove('success', 'error', 'warning', 'info');
+            
+            // Add appropriate type class
+            notification.classList.add(type);
+            
+            // Set icon based on type
+            const icons = {
+                'success': '✅',
+                'error': '❌', 
+                'warning': '⚠️',
+                'info': 'ℹ️'
+            };
+            
+            text.innerHTML = `${icons[type] || '✅'} ${message}`;
             notification.classList.add('show');
             
+            // Auto-hide after delay (longer for errors)
+            const delay = type === 'error' ? 5000 : 3000;
             setTimeout(() => {
                 notification.classList.remove('show');
-            }, 3000);
+            }, delay);
+        }
+        
+        // Enhanced loading states
+        function showLoadingState(elementId, message = 'Loading...') {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        ${message}
+                    </div>
+                `;
+            }
+        }
+        
+        // Connection status indicator
+        let connectionStatus = 'online';
+        function updateConnectionStatus(status) {
+            connectionStatus = status;
+            const indicator = document.getElementById('connectionStatus');
+            if (indicator) {
+                indicator.className = `connection-status ${status}`;
+                indicator.title = status === 'online' ? 'Connected' : 
+                               status === 'demo' ? 'Demo Mode - No API Key' : 'Connection Issues';
+            }
+        }
+        
+        // Enhanced error handling for API calls
+        async function safeApiCall(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    }
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 429) {
+                        throw new Error('Rate limit exceeded. Please wait a moment.');
+                    } else if (response.status === 401) {
+                        throw new Error('Authentication required. Please log in again.');
+                    } else if (response.status >= 500) {
+                        throw new Error('Server error. Please try again later.');
+                    } else {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.error || `Request failed (${response.status})`);
+                    }
+                }
+                
+                const data = await response.json();
+                updateConnectionStatus('online');
+                return data;
+                
+            } catch (error) {
+                if (error.message.includes('fetch')) {
+                    updateConnectionStatus('offline');
+                    throw new Error('Connection failed. Please check your internet connection.');
+                }
+                throw error;
+            }
         }
 
         // Shop optimization functions
