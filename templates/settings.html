@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arthur's Den - Settings</title>
+    
+    <!-- Professional Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1f2937;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: var(--gradient-primary);
+            padding: 2rem 0;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand h1 {
+            color: white;
+            font-size: 2rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .settings-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 2rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .search-terms-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .search-term-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .search-term-input, .shop-input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .search-term-input:focus, .shop-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .remove-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            background: #dc2626;
+        }
+
+        .add-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .add-btn:hover {
+            background: #059669;
+        }
+
+        .save-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-md);
+        }
+
+        .save-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: var(--success);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-xl);
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .help-text {
+            font-size: 0.9rem;
+            color: var(--gray-600);
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="brand">
+                <h1><i class="fas fa-mountain"></i> Arthur's Den - Settings</h1>
+            </div>
+            <div class="nav-links">
+                <a href="/"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                <a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Search Terms Card -->
+        <div class="settings-card">
+            <h2 class="card-title">
+                <i class="fas fa-search"></i>
+                Custom Search Terms
+            </h2>
+            
+            <div class="form-group">
+                <label>Search Keywords</label>
+                <div class="help-text">Add keywords to search for on Etsy. Each term will find relevant products and competitors.</div>
+                
+                <div class="search-terms-container" id="searchTermsContainer">
+                    <!-- Search terms will be populated by JavaScript -->
+                </div>
+                
+                <button class="add-btn" onclick="addSearchTerm()">
+                    <i class="fas fa-plus"></i> Add Search Term
+                </button>
+            </div>
+            
+            <button class="save-btn" onclick="saveSearchTerms()">
+                <i class="fas fa-save"></i> Save Search Terms
+            </button>
+        </div>
+
+        <!-- Watchlist Card -->
+        <div class="settings-card">
+            <h2 class="card-title">
+                <i class="fas fa-eye"></i>
+                Shop Watchlist
+            </h2>
+            
+            <div class="form-group">
+                <label>Shops to Monitor</label>
+                <div class="help-text">Add specific Etsy shop names to monitor their products and performance.</div>
+                
+                <div class="search-terms-container" id="watchlistContainer">
+                    <!-- Watchlist shops will be populated by JavaScript -->
+                </div>
+                
+                <button class="add-btn" onclick="addWatchlistShop()">
+                    <i class="fas fa-plus"></i> Add Shop
+                </button>
+            </div>
+            
+            <button class="save-btn" onclick="saveWatchlist()">
+                <i class="fas fa-save"></i> Save Watchlist
+            </button>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <span id="notificationText"></span>
+    </div>
+
+    <script>
+        // Initialize data from server
+        let searchTerms = {{ search_terms | tojson }};
+        let watchlistShops = {{ watchlist_shops | tojson }};
+
+        // Initialize the UI
+        document.addEventListener('DOMContentLoaded', function() {
+            renderSearchTerms();
+            renderWatchlist();
+        });
+
+        function renderSearchTerms() {
+            const container = document.getElementById('searchTermsContainer');
+            container.innerHTML = '';
+            
+            if (searchTerms.length === 0) {
+                searchTerms = ['nursery wall art', 'personalized baby gifts'];
+            }
+            
+            searchTerms.forEach((term, index) => {
+                const div = document.createElement('div');
+                div.className = 'search-term-item';
+                div.innerHTML = `
+                    <input type="text" class="search-term-input" value="${term}" 
+                           onchange="updateSearchTerm(${index}, this.value)">
+                    <button class="remove-btn" onclick="removeSearchTerm(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderWatchlist() {
+            const container = document.getElementById('watchlistContainer');
+            container.innerHTML = '';
+            
+            if (watchlistShops.length === 0) {
+                const div = document.createElement('div');
+                div.className = 'help-text';
+                div.textContent = 'No shops added yet. Add competitor shop names to monitor.';
+                container.appendChild(div);
+                return;
+            }
+            
+            watchlistShops.forEach((shop, index) => {
+                const div = document.createElement('div');
+                div.className = 'search-term-item';
+                div.innerHTML = `
+                    <input type="text" class="shop-input" value="${shop}" 
+                           onchange="updateWatchlistShop(${index}, this.value)">
+                    <button class="remove-btn" onclick="removeWatchlistShop(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function addSearchTerm() {
+            searchTerms.push('');
+            renderSearchTerms();
+        }
+
+        function removeSearchTerm(index) {
+            searchTerms.splice(index, 1);
+            renderSearchTerms();
+        }
+
+        function updateSearchTerm(index, value) {
+            searchTerms[index] = value;
+        }
+
+        function addWatchlistShop() {
+            watchlistShops.push('');
+            renderWatchlist();
+        }
+
+        function removeWatchlistShop(index) {
+            watchlistShops.splice(index, 1);
+            renderWatchlist();
+        }
+
+        function updateWatchlistShop(index, value) {
+            watchlistShops[index] = value;
+        }
+
+        async function saveSearchTerms() {
+            try {
+                const response = await fetch('/api/update-search-terms', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ search_terms: searchTerms })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showNotification('Search terms saved successfully!');
+                }
+            } catch (error) {
+                showNotification('Error saving search terms', 'error');
+            }
+        }
+
+        async function saveWatchlist() {
+            try {
+                const response = await fetch('/api/update-watchlist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ shops: watchlistShops })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showNotification('Watchlist saved successfully!');
+                }
+            } catch (error) {
+                showNotification('Error saving watchlist', 'error');
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const text = document.getElementById('notificationText');
+            
+            text.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

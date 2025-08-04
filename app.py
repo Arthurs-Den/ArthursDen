@@ -124,14 +124,17 @@ def get_market_data():
     if not session.get('authenticated'):
         return jsonify({'error': 'Authentication required'}), 401
     
-    # Fetch real-time Etsy data for multiple search terms
-    search_terms = [
+    # Get custom search terms from session or use defaults
+    search_terms = session.get('search_terms', [
         "nursery wall art",
         "personalized baby gifts", 
         "milestone baby blanket",
         "custom name sign",
         "baby shower decorations"
-    ]
+    ])
+    
+    # Get shops to watch from session
+    watchlist_shops = session.get('watchlist_shops', [])
     
     all_products = []
     total_revenue = 0
@@ -142,6 +145,16 @@ def get_market_data():
         listings_data = fetch_etsy_listings(term, limit=5)  # Get 5 per category
         if listings_data:
             products = process_etsy_data(listings_data, term)
+            
+            # Filter by watchlist shops if specified
+            if watchlist_shops:
+                filtered_products = []
+                for product in products:
+                    if any(shop.lower() in product['shop'].lower() for shop in watchlist_shops):
+                        product['watchlist_match'] = True
+                        filtered_products.append(product)
+                products = filtered_products
+            
             all_products.extend(products)
             
             # Calculate totals
@@ -290,6 +303,43 @@ def login():
         return jsonify({'success': True, 'message': 'Login successful', 'redirect': '/'})
     else:
         return jsonify({'error': 'Invalid credentials'}), 401
+
+@app.route('/settings')
+def settings():
+    if not session.get('authenticated'):
+        return redirect('/login')
+    return render_template('settings.html', 
+                         username=session.get('username', 'Admin'),
+                         search_terms=session.get('search_terms', []),
+                         watchlist_shops=session.get('watchlist_shops', []))
+
+@app.route('/api/update-search-terms', methods=['POST'])
+def update_search_terms():
+    if not session.get('authenticated'):
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    data = request.get_json()
+    search_terms = data.get('search_terms', [])
+    
+    # Clean and validate search terms
+    clean_terms = [term.strip() for term in search_terms if term.strip()]
+    session['search_terms'] = clean_terms
+    
+    return jsonify({'success': True, 'search_terms': clean_terms})
+
+@app.route('/api/update-watchlist', methods=['POST'])
+def update_watchlist():
+    if not session.get('authenticated'):
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    data = request.get_json()
+    shops = data.get('shops', [])
+    
+    # Clean and validate shop names
+    clean_shops = [shop.strip() for shop in shops if shop.strip()]
+    session['watchlist_shops'] = clean_shops
+    
+    return jsonify({'success': True, 'watchlist_shops': clean_shops})
 
 @app.route('/logout')
 def logout():
