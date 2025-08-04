@@ -581,6 +581,198 @@
         .notification.show {
             transform: translateX(0);
         }
+
+        /* Product Details Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 2rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--gradient-primary);
+            color: white;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .close {
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .close:hover {
+            opacity: 0.7;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .product-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .product-images {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .main-image {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .image-thumbnails {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .thumbnail {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .thumbnail:hover,
+        .thumbnail.active {
+            opacity: 1;
+        }
+
+        .product-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--gray-600);
+        }
+
+        .info-value {
+            font-weight: 500;
+            color: var(--gray-900);
+        }
+
+        .seller-profile {
+            background: var(--gray-50);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 2rem;
+        }
+
+        .seller-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .seller-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .seller-info h3 {
+            margin: 0;
+            color: var(--gray-900);
+        }
+
+        .seller-info p {
+            margin: 0;
+            color: var(--gray-600);
+            font-size: 0.9rem;
+        }
+
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .tag {
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .clickable-row {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .clickable-row:hover {
+            background-color: var(--gray-100) !important;
+        }
     </style>
 </head>
 <body>
@@ -623,6 +815,12 @@
                 <i class="fas fa-cog"></i>
                 Settings
             </button>
+            {% if user_role == 'admin' %}
+            <button class="nav-tab" onclick="window.location.href='/users'">
+                <i class="fas fa-users"></i>
+                Users
+            </button>
+            {% endif %}
         </div>
     </nav>
 
@@ -636,10 +834,10 @@
                     <div class="stat-header">
                         <div class="stat-title">Total Revenue</div>
                         <div class="stat-icon" style="background: var(--gradient-success);">
-                            <i class="fas fa-dollar-sign"></i>
+                            <i class="fas fa-pound-sign"></i>
                         </div>
                     </div>
-                    <div class="stat-value" id="totalRevenue">$157,692</div>
+                    <div class="stat-value" id="totalRevenue">£127,441</div>
                     <div class="stat-subtitle">Across all products</div>
                 </div>
 
@@ -734,8 +932,8 @@
                                     <i class="fas fa-rocket"></i>
                                 </div>
                             </div>
-                            <div class="stat-value" style="font-size: 1.5rem;">Space Adventure</div>
-                            <div class="stat-subtitle">+35% growth, $25K/month potential</div>
+                            <div class="stat-value" style="font-size: 1.5rem;">Personalised Nursery</div>
+                            <div class="stat-subtitle">+35% growth, £20K/month potential</div>
                         </div>
                         
                         <div class="stat-card">
@@ -773,6 +971,19 @@
             </div>
         </div>
     </main>
+
+    <!-- Product Details Modal -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Product Details</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
 
     <!-- Notification -->
     <div id="notification" class="notification">
@@ -823,23 +1034,191 @@
             }
         }
 
-        // Update Products Table
+        // Update Products Table with enhanced interactivity
         function updateProductsTable() {
             if (!marketData) return;
             
             const tbody = document.getElementById('productsTable');
-            tbody.innerHTML = marketData.products.map(product => `
-                <tr>
-                    <td><strong>${product.title}</strong></td>
-                    <td>${product.shop}</td>
-                    <td><strong>$${product.price.toFixed(2)}</strong></td>
+            tbody.innerHTML = marketData.products.map((product, index) => `
+                <tr class="clickable-row" onclick="showProductDetails('${product.listing_id || index}')">
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            ${product.product_images && product.product_images[0] ? 
+                                `<img src="${product.product_images[0].thumbnail || '/static/placeholder.jpg'}" 
+                                     style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover;">` : 
+                                '<div style="width: 40px; height: 40px; background: var(--gray-200); border-radius: 6px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-image"></i></div>'
+                            }
+                            <div>
+                                <strong>${product.title}</strong>
+                                ${product.description ? `<br><small style="color: var(--gray-600);">${product.description.substring(0, 50)}...</small>` : ''}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <strong>${product.seller_profile?.shop_name || product.shop}</strong>
+                            ${product.seller_profile?.seller_location ? `<br><small style="color: var(--gray-600);">${product.seller_profile.seller_location}</small>` : ''}
+                        </div>
+                    </td>
+                    <td><strong>£${product.price.toFixed(2)}</strong></td>
                     <td><strong>${product.weekly_sales}</strong></td>
                     <td><span class="growth-positive">${product.sales_trend}</span></td>
-                    <td><strong>$${product.revenue.toLocaleString()}</strong></td>
+                    <td><strong>£${product.revenue.toLocaleString()}</strong></td>
                     <td><span class="badge ${product.priority.toLowerCase()}">${product.priority}</span></td>
                     <td><span class="badge ${product.market_trend.toLowerCase()}">${product.market_trend}</span></td>
                 </tr>
             `).join('');
+        }
+
+        // Show Product Details Modal
+        async function showProductDetails(listingId) {
+            try {
+                const modal = document.getElementById('productModal');
+                const modalBody = document.getElementById('modalBody');
+                const modalTitle = document.getElementById('modalTitle');
+                
+                // Show loading state
+                modalBody.innerHTML = '<div class="loading"><div class="spinner"></div>Loading product details...</div>';
+                modal.style.display = 'block';
+                
+                // Fetch product details
+                const response = await fetch(`/api/product-details/${listingId}`);
+                const product = await response.json();
+                
+                modalTitle.textContent = product.title;
+                
+                // Build detailed modal content
+                modalBody.innerHTML = `
+                    <div class="product-detail-grid">
+                        <div class="product-images">
+                            <img src="${product.product_images[0]?.large || '/static/placeholder.jpg'}" 
+                                 alt="${product.title}" class="main-image" id="mainImage">
+                            ${product.product_images.length > 1 ? `
+                                <div class="image-thumbnails">
+                                    ${product.product_images.map((img, index) => `
+                                        <img src="${img.thumbnail}" alt="Product ${index + 1}" 
+                                             class="thumbnail ${index === 0 ? 'active' : ''}"
+                                             onclick="changeMainImage('${img.large}', this)">
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="product-info">
+                            <div class="info-row">
+                                <span class="info-label">Price:</span>
+                                <span class="info-value"><strong>£${product.price}</strong></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Views:</span>
+                                <span class="info-value">${product.views.toLocaleString()}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Favorites:</span>
+                                <span class="info-value">${product.favorites.toLocaleString()}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Priority Score:</span>
+                                <span class="info-value"><strong>${product.priority_score}/100</strong></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Processing Time:</span>
+                                <span class="info-value">${product.processing_time} days</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Quantity Available:</span>
+                                <span class="info-value">${product.quantity}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Created:</span>
+                                <span class="info-value">${new Date(product.created_date).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="seller-profile">
+                        <h3 style="margin-bottom: 1rem;"><i class="fas fa-store"></i> Seller Profile</h3>
+                        <div class="seller-header">
+                            <img src="${product.seller_profile.seller_avatar || '/static/default-avatar.jpg'}" 
+                                 alt="Seller Avatar" class="seller-avatar">
+                            <div class="seller-info">
+                                <h3>${product.seller_profile.shop_name}</h3>
+                                <p>${product.seller_profile.seller_location}</p>
+                                <p><strong>${product.seller_profile.total_sales || 0}</strong> total sales</p>
+                            </div>
+                        </div>
+                        
+                        ${product.seller_profile.seller_bio ? `
+                            <div style="margin-bottom: 1rem;">
+                                <strong>About:</strong> ${product.seller_profile.seller_bio}
+                            </div>
+                        ` : ''}
+                        
+                        ${product.seller_profile.announcement ? `
+                            <div style="margin-bottom: 1rem; padding: 1rem; background: var(--gray-100); border-radius: 8px;">
+                                <i class="fas fa-bullhorn"></i> <strong>Shop Announcement:</strong><br>
+                                ${product.seller_profile.announcement}
+                            </div>
+                        ` : ''}
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <a href="${product.seller_profile.shop_url}" target="_blank" 
+                               style="color: var(--primary); text-decoration: none; font-weight: 600;">
+                                <i class="fas fa-external-link-alt"></i> Visit Shop on Etsy
+                            </a>
+                        </div>
+                    </div>
+                    
+                    ${product.description ? `
+                        <div style="margin-top: 2rem;">
+                            <h3><i class="fas fa-align-left"></i> Description</h3>
+                            <p style="margin-top: 1rem; line-height: 1.6;">${product.description}</p>
+                        </div>
+                    ` : ''}
+                    
+                    ${product.tags && product.tags.length > 0 ? `
+                        <div style="margin-top: 2rem;">
+                            <h3><i class="fas fa-tags"></i> Tags</h3>
+                            <div class="tags-container">
+                                ${product.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${product.materials && product.materials.length > 0 ? `
+                        <div style="margin-top: 2rem;">
+                            <h3><i class="fas fa-hammer"></i> Materials</h3>
+                            <div class="tags-container">
+                                ${product.materials.map(material => `<span class="tag" style="background: var(--success);">${material}</span>`).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+                
+            } catch (error) {
+                console.error('Error loading product details:', error);
+                modalBody.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--danger);">Error loading product details</div>';
+            }
+        }
+
+        // Change main image in modal
+        function changeMainImage(imageSrc, thumbnail) {
+            document.getElementById('mainImage').src = imageSrc;
+            document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+            thumbnail.classList.add('active');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('productModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('productModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
         }
 
         // Update Stats
